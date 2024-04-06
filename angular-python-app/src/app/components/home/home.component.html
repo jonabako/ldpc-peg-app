@@ -1,0 +1,351 @@
+<!-- Navigation Header -->
+<header tuiNavigationHeader>
+    <span tuiNavigationLogo class="tui-text_body-l">
+        <img src="assets/images/logo.png" class="logo-img" alt="Logo" />
+        Low-Density Parity Check (LDPC) - Progressive Edge Growth (PEG) | SIMULATION TOOL
+    </span>
+</header>
+
+<!-- Page Body -->
+<main tuiNavigationMain>
+
+    <!-- Page Header -->
+    <header tuiHeader style="margin-bottom: -20px">
+        <h3 class="tui-text_h3" style="margin-top: 1px">
+            <div tuiNavigationLogo>
+                <span class="tui-space_bottom-5" tuiFade>
+                    Simulation of PEG Algorithm for Short Cycle Free LDPC Code Construction:
+                </span>
+            </div>
+            <hr>
+            <div class="tui-text_body-xl tui-space_top-5 tui-space_bottom-5">
+                The PEG algorithm starts with 3 parameters:
+                <b style="color: var(--tui-negative)">number of symbol nodes (n)</b>,
+                <b style="color: var(--tui-positive)">number of check nodes (m)</b> and the
+                <b style="color: var(--tui-link)">symbol degree sequence (comma-separated)</b>.<br>
+                The algorithm goes over the symbol nodes one by one and it starts working
+                on another node only after all the edges required by that node's degree are established.
+            </div>
+            <div tuiCaption tuiFade>
+                <span>
+                    <tui-icon icon="tuiIconUser"></tui-icon>
+                    Jona Bako
+                </span>
+                <span>Edited 31.03.2024</span>
+                <span>
+                    <tui-icon icon="tuiIconUnlock"></tui-icon>
+                    Public
+                </span>
+            </div>
+        </h3>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <tui-tabs [(activeItemIndex)]="activeItemIndex">
+        <button tuiTab (click)="onTabClick(0)">
+            Algorithm Data Input
+        </button>
+        <button *ngIf="graphFlag" tuiTab (click)="onTabClick(1)">
+            Intermediate Steps
+        </button>
+        <button *ngIf="graphFlag" tuiTab (click)="onTabClick(2)">
+            Subgraph Generation
+        </button>
+    </tui-tabs>
+
+    <!-- Content Divs -->
+    <div *ngIf="activeItemIndex === 0">
+        <!-- Content for Algorithm Data Input -->
+        <form>
+
+            <!-- Input Data -->
+            <div class="tui-row tui-space_top-8">
+                <div class="tui-col_5">
+                    <div class="tui-row">
+                        <div class="tui-col_6">
+                            <tui-input>
+                                Number of symbol nodes (n):
+                                <input type="number" min="0" step="1" placeholder="e.g. 5" [(ngModel)]="nrSymbolNodes"
+                                    name="nrSymbolNodes" tuiTextfield />
+                            </tui-input>
+                        </div>
+                        <div class="tui-col_6">
+                            <tui-input>
+                                Number of check nodes (m):
+                                <input type="number" min="0" step="1" placeholder="e.g. 3" [(ngModel)]="nrCheckNodes"
+                                    name="nrCheckNodes" tuiTextfield />
+                            </tui-input>
+                        </div>
+                    </div>
+                </div>
+                <div class="tui-col_3">
+                    <tui-input>
+                        S-node degrees (comma-separated):
+                        <input type="text" placeholder="e.g. 3, 2, 1, 3, 2" [(ngModel)]="symbolNodeDegrees"
+                            name="symbolNodeDegrees" tuiTextfield />
+                    </tui-input>
+                </div>
+                <div class="tui-col_4" style="display: inline-block; text-align: right;">
+                    <button iconRight="tuiIconRefreshCw" appearance="secondary" size="l" tuiButton type="submit"
+                        class="tui-form__button" (click)="generateGraph()" (click)="generateGraphAtStep(currentStep)">
+                        GENERATE GRAPH
+                    </button>
+                    <button iconRight="tuiIconXCircle" appearance="secondary-destructive" size="l" tuiButton
+                        type="button" class="tui-form__button" (click)="clearInputFields()">
+                        CLEAR
+                    </button>
+                </div>
+            </div>
+
+            <!-- Generated Tanner Graph and Final Parity Check Matrix -->
+            <div class="tui-row tui-space_top-8">
+
+                <div class="tui-col_6">
+                    <!-- Graph on the left -->
+                    <tui-island style="box-shadow: var(--tui-shadow-dropdown); max-height: 300px;">
+
+                        <h3 class="tui-island__title" style="color: var(--tui-neutral-fill)">Generated Tanner Graph</h3>
+                        <p class="tui-island__paragraph">
+                            The Final Tanner Graph will be generated here.
+                        </p>
+
+                        <br>
+
+                        <ngx-graph *ngIf="graphFlag" [nodes]="nodes" [links]="links" [animate]="true" [layout]="'dagre'"
+                            [layoutSettings]="{
+                            orientation: 'TB',
+                            edgePadding: '0',
+                            multigraph: false,
+                            align: 'UL'
+                        }" [draggingEnabled]="true" [panningEnabled]="true">
+
+                            <ng-template #nodeTemplate let-node>
+                                <svg:g class="node">
+                                    <svg:circle [attr.fill]="node.data.customColor || node.data.color" r="10"
+                                        [attr.cx]="node.dimension.width / 2" [attr.cy]="node.dimension.height / 2">
+                                    </svg:circle>
+                                    <svg:text alignment-baseline="middle" text-anchor="middle" fill="#000000"
+                                        font-weight="bold">
+                                        {{ node.label }}
+                                    </svg:text>
+                                </svg:g>
+                            </ng-template>
+
+                            <ng-template #linkTemplate let-link>
+                                <svg:g class="edge">
+                                    <svg:path class="line" stroke-linecap="round" stroke-width="2" [attr.d]="link.line"
+                                        [attr.stroke]="link.data.color"></svg:path>
+                                </svg:g>
+                            </ng-template>
+                        </ngx-graph>
+
+                    </tui-island>
+                </div>
+
+                <div class="tui-col_6">
+                    <!-- Matrix on the right -->
+                    <tui-island style="box-shadow: var(--tui-shadow-dropdown);">
+
+                        <h3 class="tui-island__title" style="color: var(--tui-neutral-fill)">Parity Check Matrix</h3>
+                        <p class="tui-island__paragraph">
+                            The Final Parity Check Matrix is displayed below:
+                        </p>
+
+                        <br>
+
+                        <table *ngIf="graphFlag" class="parity-check-table">
+                            <tr *ngFor="let row of parityCheckMatrix">
+                                <ng-container *ngFor="let cell of row; let j = index">
+                                    <td [style.color]="cell === 1 ? 'var(--tui-positive)' : 'var(--tui-negative)'">{{
+                                        cell }}</td>
+                                </ng-container>
+                            </tr>
+                            <br>
+                        </table>
+
+                    </tui-island>
+                </div>
+
+            </div>
+
+        </form>
+    </div>
+
+    <div *ngIf="activeItemIndex === 1">
+        <!-- Content for Intermediate Steps -->
+
+        <!-- Incrementing/Decrementing between Intermediate Steps-->
+        <div class="tui-row tui-space_top-8" style="display: flex; justify-content: center;">
+            <div class="tui-col_2" tuiButtonGroup tuiSurface="elevated">
+                <button (click)="goBack()">
+                    <tui-icon icon="tuiIconArrowLeftCircleLarge"></tui-icon>
+                </button>
+
+                <p class="tui-text_body-xl" style="color: var(--tui-link-hover); margin-left: 15px; margin-right: 15px">
+                    Step {{ currentStep }}</p>
+
+                <button (click)="goForward()">
+                    <tui-icon icon="tuiIconArrowRightCircleLarge"></tui-icon>
+                </button>
+            </div>
+        </div>
+
+        <!-- Generated Tanner Graph and Final Parity Check Matrix at Current Step-->
+        <div class="tui-row tui-space_top-8">
+            <div class="tui-col_6">
+                <!-- Graph on the left -->
+                <tui-island style="box-shadow: var(--tui-shadow-dropdown); max-height: 300px;">
+                    <h3 class="tui-island__title" style="color: var(--tui-neutral-fill)">Generated Tanner Graph</h3>
+                    <p class="tui-island__paragraph">
+                        The Tanner Graph at intermediate step {{ currentStep }}:
+                    </p>
+
+                    <br>
+
+                    <ngx-graph *ngIf="graphFlag" [nodes]="nodesAtStep" [links]="linksAtStep" [animate]="true"
+                        [layout]="'dagre'" [layoutSettings]="{
+                        orientation: 'TB',
+                        edgePadding: '0',
+                        multigraph: false,
+                        align: 'UL'
+                    }" [draggingEnabled]="true" [panningEnabled]="true">
+
+                        <ng-template #nodeTemplate let-node>
+                            <svg:g class="node">
+                                <svg:circle [attr.fill]="node.data.customColor || node.data.color" r="10"
+                                    [attr.cx]="node.dimension.width / 2" [attr.cy]="node.dimension.height / 2">
+                                </svg:circle>
+                                <svg:text alignment-baseline="middle" text-anchor="middle" fill="#000000"
+                                    font-weight="bold">
+                                    {{ node.label }}
+                                </svg:text>
+                            </svg:g>
+                        </ng-template>
+
+                        <ng-template #linkTemplate let-link>
+                            <svg:g class="edge">
+                                <svg:path class="line" stroke-linecap="round" stroke-width="2" [attr.d]="link.line"
+                                    [attr.stroke]="link.data.color"></svg:path>
+                            </svg:g>
+                        </ng-template>
+                    </ngx-graph>
+
+                </tui-island>
+            </div>
+            <div class="tui-col_6">
+                <!-- Matrix on the right -->
+                <tui-island style="box-shadow: var(--tui-shadow-dropdown);">
+                    <h3 class="tui-island__title" style="color: var(--tui-neutral-fill)">Parity Check Matrix</h3>
+                    <p class="tui-island__paragraph">
+                        The Parity Check Matrix at intermediate step {{ currentStep }}:
+                    </p>
+
+                    <br>
+
+                    <table *ngIf="graphFlag">
+                        <tr *ngFor="let row of parityCheckMatrixAtStep">
+                            <ng-container *ngFor="let cell of row; let j = index">
+                                <td [style.color]="cell === 1 ? 'var(--tui-positive)' : 'var(--tui-negative)'">{{
+                                    cell }}</td>
+                            </ng-container>
+                        </tr>
+                        <br>
+                    </table>
+
+                </tui-island>
+            </div>
+        </div>
+
+    </div>
+
+    <div *ngIf="activeItemIndex === 2">
+        <!-- Content for Subgraph Generation -->
+
+        <form>
+            <!-- Input Data -->
+            <div class="tui-row tui-space_top-8">
+
+                <!-- Selector Fields -->
+                <div class="tui-col_6">
+                    <div class="tui-row">
+                        <div class="tui-col_6">
+                            <tui-input>
+                                Symbol node index (i):
+                                <input type="number" min="0" step="1" max="nrSymbolNodes" placeholder="e.g. 2 for s2"
+                                    [(ngModel)]="selectedSymbolNodeIndex" name="selectedSymbolNodeIndex" tuiTextfield />
+                            </tui-input>
+                        </div>
+                        <div class="tui-col_6">
+                            <tui-input>
+                                Subgraph depth (d):
+                                <input type="number" min="0" step="1" placeholder="e.g. 4"
+                                    [(ngModel)]="selectedSubgraphDepth" name="selectedSubgraphDepth" tuiTextfield />
+                            </tui-input>
+                        </div>
+                    </div>
+                    <div class="tui-row tui-space_top-8">
+                        <div class="tui-col_12" style="display: inline-block; text-align: left;">
+                            <button iconRight="tuiIconRefreshCw" appearance="secondary" size="l" tuiButton type="submit"
+                                class="tui-form__button" (click)="generateSubgraph()">
+                                GENERATE SUBGRAPH
+                            </button>
+                            <button iconRight="tuiIconXCircle" appearance="secondary-destructive" size="l" tuiButton
+                                type="button" class="tui-form__button" (click)="clearSelectorFields()">
+                                CLEAR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tui-col_6">
+                    <!-- Subgraph -->
+                    <tui-island style="box-shadow: var(--tui-shadow-dropdown);">
+                        <h3 class="tui-island__title" style="color: var(--tui-neutral-fill)">Subgraph of selected S-node
+                        </h3>
+                        <p class="tui-island__paragraph">
+                            The subgraph of the symbol node {{ (selectedSymbolNodeIndex !== null &&
+                            selectedSymbolNodeIndex !== undefined) ? selectedSymbolNodeIndex + ' ' : '' }}will be
+                            generated here.
+                        </p>
+
+                        <br>
+
+                        <ngx-graph *ngIf="subgraphFlag" [nodes]="subgraphNodes" [links]="subgraphLinks" [animate]="true"
+                            [layout]="'dagre'" [layoutSettings]="{
+                        orientation: 'TB',
+                        edgePadding: '0',
+                        multigraph: false,
+                        align: 'UL'
+                    }" [draggingEnabled]="true" [panningEnabled]="true">
+
+                            <ng-template #nodeTemplate let-node>
+                                <svg:g class="node">
+                                    <svg:circle [attr.fill]="node.data.customColor || node.data.color" r="10"
+                                        [attr.cx]="node.dimension.width / 2" [attr.cy]="node.dimension.height / 2">
+                                    </svg:circle>
+                                    <svg:text alignment-baseline="middle" text-anchor="middle" fill="#000000"
+                                        font-weight="bold">
+                                        {{ node.label }}
+                                    </svg:text>
+                                </svg:g>
+                            </ng-template>
+
+                            <ng-template #linkTemplate let-link>
+                                <svg:g class="edge">
+                                    <svg:path class="line" stroke-linecap="round" stroke-width="2" [attr.d]="link.line"
+                                        [attr.stroke]="link.data.color"></svg:path>
+                                </svg:g>
+                            </ng-template>
+                        </ngx-graph>
+
+                    </tui-island>
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+
+
+</main>
