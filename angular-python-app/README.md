@@ -29,7 +29,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 3. **Install Node.js Modules**:
    - Navigate to the frontend directory:
      ```bash
-     cd frontend
+     cd angular-python-app
      ```
    - Install the required Node.js modules:
      ```bash
@@ -53,7 +53,7 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 1. **Start the Angular Development Server**:
    - In a new terminal or command prompt window:
      ```bash
-     cd frontend
+     cd angular-python-app
      ng serve --open
      ```
 
@@ -66,8 +66,8 @@ This project was generated with [Angular CLI](https://github.com/angular/angular
 - The frontend communicates with the Flask backend running at `http://localhost:5000`.
 
 ## Directory Structure
+- **src/**: Contains the Angular frontend code.
 - **backend/**: Contains the Flask backend code.
-- **frontend/**: Contains the Angular frontend code.
 
 ## Additional Notes
 - This is a basic setup for a 2-tier application.
